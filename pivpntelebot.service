@@ -1,0 +1,14 @@
+[Unit]
+Description=PiVPN Controller Telegram Bot
+## make sure we only start the service after network is up
+Wants=network-online.target
+After=network.target
+
+[Service]
+#Restart=always
+ExecStart=/bin/bash /usr/bin/pivpntelebot.sh
+# Useful during debugging; remove it once the service is working
+#StandardOutput=console
+
+[Install]
+WantedBy=multi-user.target
