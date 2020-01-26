@@ -105,7 +105,7 @@ def setDns(chatid, ndns):
     if not checkSyntax(ndns):
         return "Dns address syntax error !!!"
 
-    if ndns == ndns:
+    if ndns == odns:
         return "New dns address is the same with current dns address !!!"
 
     sedcmd = "sudo sed -i 's/" + odns + "/" + ndns + "/g' /etc/openvpn/easy-rsa/pki/Default.txt"
@@ -128,7 +128,7 @@ def reboot(chatid):
     time.sleep(3)
 
     cmd = shlex.split("/bin/bash -c \"sudo reboot\"")
-    pivpn = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    pivpn = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     pivpn.wait()
     return "rebotting ...."
 
@@ -140,10 +140,28 @@ def restartNetwork(chatid):
     time.sleep(3)
 
     cmd = shlex.split("/bin/bash -c \"sudo service networking restart\"")
-    pivpn = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    pivpn = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     pivpn.wait()
     time.sleep(10)
     return "Restarted network !!!"
+
+def updateBot(chatid):
+    if checkUserType(chatid) != "admin":
+        return "Permission denied, you can update bot !"
+
+    bot.sendMessage(chatid, "Updating bot ...")
+    time.sleep(3)
+
+    cmd = shlex.split("/bin/bash -c \"/home/pi/PiVPN-Telebot/pivpntelebotupdate.sh\"")
+    #cmd = shlex.split("/bin/bash -c \"/usr/bin/pivpntelebotupdate.sh\"")
+    pivpn = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    pivpn.wait()
+    time.sleep(1)
+
+    retmsg="Update failed !!!"
+    if pivpn.returncode == 0:
+        retmsg = "Updating bot finished, reboot to aplly new change !!!"
+    return retmsg
 
 
 def logCmd(chatid, cmd):
@@ -172,49 +190,6 @@ def logCmd(chatid, cmd):
         pivpn.wait()
         retmsg = "Backup log file: " + logpath_bak
 
-    return retmsg
-
-
-def getHelp(chatid):
-    retmsg = "You can not use this Bot !!!"
-
-    usertype = checkUserType(chatid)
-    if usertype == "admin":
-        retmsg = " \
-        ::: Control all PiVPN specific functions! \n \
-        :::  /addclient <client name>   Create a client ovpn profile \n \
-        :::  /delclient <client name>   Revoke a client ovpn profile \n \
-        :::  /getovpn   <client name>   Get ovpn profile of client \n \
-        :::  /listclient       			List created clients \n \
-        :::  /listconnection   			List all valid and revoked certificates \n \
-        :::  /getinfo          	        List some information: ip, dns, port, proto, ... \n \
-        ::: \n \
-        ::: \n \
-        ::: Admin management \n \
-        :::  /adduser  <username>   Add new user, who can create/del ovpn profile \n \
-        :::  /deluser  <username>   Delete user \n \
-        :::  /listuser          List all user \n \
-        :::  /listclientall     List all created clients \n \
-        :::  /logcmd  <opt>     Get log info or clear log file \n \
-        :::  /setdns <dns addr> Set dns address \n \
-        ::: \n \
-        ::: \n \
-        ::: Pi management \n \
-        :::  /reboot <yes or no>    Reboot raspberry pi server\n \
-        :::  /restartnetwork        Restart network\n \
-        :::  /runcommand <command>  Run any command and get output \n \
-        "
-
-    elif usertype == "normal":
-        retmsg = " \
-        ::: Control all PiVPN specific functions! \n \
-        :::  /addclient <client name>   Create a client ovpn profile \n \
-        :::  /delclient <client name>   Revoke a client ovpn profile \n \
-        :::  /getovpn   <client name>   Get ovpn profile of client \n \
-        :::  /listclient       			List created clients to the server \n \
-        :::  /listconnection   			List all valid and revoked certificates \n \
-        :::  /getinfo          		List some information: ip, dns, port, proto, ... \n \
-        "
     return retmsg
 
 
@@ -574,6 +549,48 @@ def sendTextToAll(mode, msg):
             bot.sendMessage(int(user.id), msg)
 
 
+
+def getHelp(chatid):
+    retmsg = "You can not use this Bot !!!"
+
+    usertype = checkUserType(chatid)
+    if usertype == "admin":
+        retmsg = " \
+        ::: Control all PiVPN specific functions! \n \
+        :::  /addclient <client name>   Create a client ovpn profile \n \
+        :::  /delclient <client name>   Revoke a client ovpn profile \n \
+        :::  /getovpn   <client name>   Get ovpn profile of client \n \
+        :::  /listclient       			List created clients \n \
+        :::  /listconnection   			List all valid and revoked certificates \n \
+        :::  /getinfo          	        List some information: ip, dns, port, proto, ... \n \
+        ::: \n \
+        ::: Admin management \n \
+        :::  /adduser  <username>   Add new user, who can create/del ovpn profile \n \
+        :::  /deluser  <username>   Delete user \n \
+        :::  /listuser          List all user \n \
+        :::  /listclientall     List all created clients \n \
+        :::  /logcmd  <opt>     Get log info or clear log file \n \
+        :::  /setdns <dns addr> Set dns address \n \
+        ::: \n \
+        ::: Pi management \n \
+        :::  /reboot <yes or no>    Reboot raspberry pi server\n \
+        :::  /restartnetwork        Restart network\n \
+        :::  /runcommand <command>  Run any command and get output \n \
+        :::  /updatebot             Update PiVPN Telebot \n \
+        "
+
+    elif usertype == "normal":
+        retmsg = " \
+        ::: Control all PiVPN specific functions! \n \
+        :::  /addclient <client name>   Create a client ovpn profile \n \
+        :::  /delclient <client name>   Revoke a client ovpn profile \n \
+        :::  /getovpn   <client name>   Get ovpn profile of client \n \
+        :::  /listclient       			List created clients to the server \n \
+        :::  /listconnection   			List all valid and revoked certificates \n \
+        :::  /getinfo          		List some information: ip, dns, port, proto, ... \n \
+        "
+    return retmsg
+
 def docommand(chatid, cmd):
     global precmd
     global cmdstage
@@ -618,6 +635,8 @@ def docommand(chatid, cmd):
         ret = "Are you sure reboot ? (yes/no): "
     elif cmd == '/restartnetwork':
         ret = restartNetwork(chatid)
+    elif cmd == '/updatebot':
+        ret = updateBot(chatid)
 
     # HELP
     elif cmd == '/help':
