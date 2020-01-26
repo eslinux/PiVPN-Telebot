@@ -152,8 +152,7 @@ def updateBot(chatid):
     bot.sendMessage(chatid, "Updating bot ...")
     time.sleep(3)
 
-    cmd = shlex.split("/bin/bash -c \"/home/pi/PiVPN-Telebot/pivpntelebotupdate.sh\"")
-    #cmd = shlex.split("/bin/bash -c \"/usr/bin/pivpntelebotupdate.sh\"")
+    cmd = shlex.split("/bin/bash -c \"/usr/bin/pivpntelebotupdate.sh\"")
     pivpn = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     pivpn.wait()
     time.sleep(1)
