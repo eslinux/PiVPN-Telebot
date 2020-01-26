@@ -692,6 +692,10 @@ def docommand(chatid, cmd):
         return ret
 
     precmd = cmd
+
+    if ret == "":
+        ret = "Oops, Command Failed !!!"
+
     return ret
 
 
