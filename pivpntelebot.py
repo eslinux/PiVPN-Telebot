@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import os
 import re
+import signal
 
 
 def getVpnDev():
@@ -97,6 +98,7 @@ def getDns():
 
     return vpn_dns.strip()
 
+
 def setDns(chatid, ndns):
     odns = getDns()
     if odns == "":
@@ -110,7 +112,8 @@ def setDns(chatid, ndns):
 
     sedcmd = "sudo sed -i 's/" + odns + "/" + ndns + "/g' /etc/openvpn/easy-rsa/pki/Default.txt"
     cmd = shlex.split("/bin/bash -c \"" + sedcmd + "\"")
-    pivpn = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,  universal_newlines=True)
+    pivpn = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             universal_newlines=True)
     pivpn.wait()
 
     retmsg = ndns + ": Set ok !"
@@ -118,7 +121,6 @@ def setDns(chatid, ndns):
         retmsg = ndns + ": Set failed !"
 
     return retmsg
-
 
 
 def reboot(chatid):
@@ -131,6 +133,7 @@ def reboot(chatid):
     pivpn = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     pivpn.wait()
     return "rebotting ...."
+
 
 def restartNetwork(chatid):
     if checkUserType(chatid) != "admin":
@@ -145,6 +148,7 @@ def restartNetwork(chatid):
     time.sleep(10)
     return "Restarted network !!!"
 
+
 def updateBot(chatid):
     if checkUserType(chatid) != "admin":
         return "Permission denied, you can update bot !"
@@ -157,7 +161,7 @@ def updateBot(chatid):
     pivpn.wait()
     time.sleep(1)
 
-    retmsg="Update failed !!!"
+    retmsg = "Update failed !!!"
     if pivpn.returncode == 0:
         retmsg = "Updating bot finished, reboot to aplly new change !!!"
     return retmsg
@@ -180,7 +184,7 @@ def logCmd(chatid, cmd):
         timets = time.strftime("%Y-%m-%d_%H:%M:%S", time.gmtime())
         logpath_bak = WORKING_FOLDER + timets + "_log.txt"
 
-        cmd = shlex.split("/bin/bash -c \"cp -rf "+logpath+ " " +logpath_bak+ "\"")
+        cmd = shlex.split("/bin/bash -c \"cp -rf " + logpath + " " + logpath_bak + "\"")
         pivpn = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
         pivpn.wait()
         time.sleep(3)
@@ -192,9 +196,6 @@ def logCmd(chatid, cmd):
     return retmsg
 
 
-
-
-
 def pivpnListClient(chatid):
     retmsg = "You have not created any client yet !!!"
     fpath = WORKING_FOLDER + str(chatid) + ".txt"
@@ -203,14 +204,14 @@ def pivpnListClient(chatid):
         list = seting_f.readlines()
         seting_f.close()
         if len(list) > 0:
-            retmsg = ""
+            retmsg = "TIME | NAME\n"
             for line in list:
                 retmsg = retmsg + line
     return retmsg
 
 
 def pivpnListClientAll(chatid):
-    retmsg = str()
+    retmsg = "TIME | NAME\n"
     counter = 0
     if checkUserType(chatid) == "admin":
         cmd = shlex.split("/bin/bash -c \"ls -l /home/pi/ovpns\"")
@@ -221,7 +222,7 @@ def pivpnListClientAll(chatid):
         for line in pivpn.stdout:
             if line.find(".ovpn") != -1:
                 retmsg = retmsg + line
-                counter = counter+1
+                counter = counter + 1
     else:
         return "Permission denied, you can not list all client list !!!"
 
@@ -238,9 +239,10 @@ def pivpnListConnection():
     for num in range(0, 7):
         pivpn.stdout.readline()
 
-    retmsg = ""
+    retmsg = "List connection: \n"
     for line in pivpn.stdout:
         retmsg = retmsg + line
+
     return retmsg
 
 
@@ -250,7 +252,8 @@ def pivpnAddClient(chatid, name):
 
     ret = "Notthing to do !!!"
     cmd = shlex.split("/bin/bash -c \"pivpn add nopass\"")
-    pivpn = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    pivpn = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             universal_newlines=True)
     pivpn.stdin.write(name + '\n')
     pivpn.stdin.flush()
     pivpn.stdin.write('1080\n')
@@ -288,7 +291,8 @@ def pivpnDelClient(chatid, name):
             if len(clientarr) > 1:
                 if clientarr[1] == name:
                     cmd = shlex.split("/bin/bash -c \"pivpn -r\"")
-                    pivpn = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                    pivpn = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                             universal_newlines=True)
                     pivpn.stdin.write(name + '\n')
                     pivpn.stdin.flush()
                     pivpn.stdin.close()
@@ -312,6 +316,7 @@ def pivpnDelClient(chatid, name):
         retmsg = "You have not created any client yet !!!"
 
     return retmsg
+
 
 def getOvpn(chatid, name):
     if not checkSyntax(name):
@@ -337,12 +342,11 @@ def getOvpn(chatid, name):
                         break
     return retmsg
 
-def getInfo(chatid):
-    retmsg = "List info: \n"
 
-    retmsg = retmsg \
+def getInfo(chatid):
+    retmsg = "List info: \n" \
              + "---PiVPN---\n" \
-             + "ip: " + getVpnIp()  + "\n" \
+             + "ip: " + getVpnIp() + "\n" \
              + "port: " + getVpnPort() + "\n" \
              + "proto: " + getVpnProto() + "\n" \
              + "dns: " + getDns() + "\n" \
@@ -353,9 +357,28 @@ def getInfo(chatid):
     return retmsg
 
 
+def createUsrlistFile():
+    ret = False
+    fpath = WORKING_FOLDER + "userlist.txt"
+    if os.path.isfile(fpath):
+        seting_f = open(fpath, "w")
+
+        IDNUM = 0
+        seting_f.write("[username]\n")
+        seting_f.write("IDNUM USERNAME CHATID TYPE TIME\n")
+        for useritem in user_list:
+            IDNUM = IDNUM + 1
+            seting_f.write(str(
+                IDNUM) + " " + useritem.username + " " + useritem.id + " " + useritem.type + " " + useritem.time + "\n")
+            seting_f.flush()
+        seting_f.close()
+        ret = True
+    return ret
 
 
 def addUser(chatid, name, id, type):
+    global user_list
+
     if not checkSyntax(name):
         return "Username syntax error !!!"
     if not checkSyntax(id):
@@ -376,27 +399,18 @@ def addUser(chatid, name, id, type):
     if not is_exist:
         ts = time.gmtime()
         timestamp = time.strftime("%Y-%m-%d", ts)
-        myuser = piuser(name, str(id), type, timestamp) #USERNAME CHATID TYPE TIME
+        myuser = piuser(name, str(id), type, timestamp)  # USERNAME CHATID TYPE TIME
         user_list.append(myuser)
 
-        fpath = WORKING_FOLDER + "userlist.txt"
-        if os.path.isfile(fpath):
-            seting_f = open(fpath, "w")
-
-            IDNUM = 0
-            seting_f.write("[username]\n")
-            seting_f.write("IDNUM CHATID TYPE TIME\n")
-            for useritem in user_list:
-                IDNUM = IDNUM + 1
-                seting_f.write(str(IDNUM) + " " + useritem.username + " " + useritem.id + " " + useritem.type + " " + useritem.time + "\n")
-                seting_f.flush()
-            seting_f.close()
+        if createUsrlistFile():
             retmsg = str(id) + ": added !!!"
-    return  retmsg
 
+    return retmsg
 
 
 def delUser(chatid, id):
+    global user_list
+
     if not checkSyntax(id):
         return "id syntax error !!!"
     if not (checkUserType(chatid) == "admin"):
@@ -417,48 +431,32 @@ def delUser(chatid, id):
     if not is_exist:
         retmsg = str(id) + ": have not exist yet !!!"
     else:
-        fpath = WORKING_FOLDER + "userlist.txt"
-        if os.path.isfile(fpath):
-            seting_f = open(fpath, "w")
-
-            IDNUM = 0
-            seting_f.write("[username]\n")
-            seting_f.write("IDNUM USERNAME CHATID TYPE TIME\n")
-            for useritem in user_list:
-                IDNUM = IDNUM + 1
-                seting_f.write(str(IDNUM) + " " + useritem.username + " " + useritem.id + " " + useritem.type + " " + useritem.time + "\n")
-                seting_f.flush()
-            seting_f.close()
+        if createUsrlistFile():
             retmsg = str(id) + ": deleted !!!"
+
     return retmsg
 
+
 def listUser(chatid):
+    global user_list
     retmsg = "Empty !!!"
 
     if not (checkUserType(chatid) == "admin"):
         return "Permission denied, you can not do this command !!!"
 
     if len(user_list) > 0:
-        retmsg = ""
+        retmsg = "IDNUM | USERNAME | CHATID | TYPE | TIME\n"
         IDNUM = 0
         for useritem in user_list:
             IDNUM = IDNUM + 1
-            struser = str(IDNUM) + " " + useritem.username + " " + useritem.id + " " + useritem.type + " " + useritem.time
+            struser = str(
+                IDNUM) + " " + useritem.username + " " + useritem.id + " " + useritem.type + " " + useritem.time
             retmsg = retmsg + struser + "\n"
     return retmsg
 
-class piuser:
-    def __init__(self, username, id, type, time):
-        self.username = username #can change
-        self.id = id #can not change
-        self.type = type
-        self.time = time
-
 
 def getTelebotToken():
-    global TELEBOT_TOKEN
-    TELEBOT_TOKEN=str()
-    is_getok = False
+    TELEBOT_TOKEN = str()
     fpath = WORKING_FOLDER + "telebot.token"
     if os.path.isfile(fpath):
         seting_f = open(fpath, "r")
@@ -469,9 +467,8 @@ def getTelebotToken():
                 tk = tk.strip()
                 if tk != "":
                     TELEBOT_TOKEN = tk
-                    is_getok = True
                     break
-    return is_getok
+    return TELEBOT_TOKEN
 
 
 def getUserlistInit():
@@ -490,6 +487,7 @@ def getUserlistInit():
             is_start = False
             nfield = 0
             line = "start"
+
             while line != "":
                 line = seting_f.readline().strip()
                 if is_start and line != "":
@@ -503,6 +501,7 @@ def getUserlistInit():
                     nfieldline = seting_f.readline().strip()  # IDNUM USERNAME CHATID TYPE TIME
                     nfield = len(nfieldline.split())
                     is_start = True
+
             seting_f.close()
         except IOError:
             print("Could not open file!")
@@ -519,6 +518,7 @@ def checkSyntax(mystr):
         else:
             break
     return flag
+
 
 def checkUserValid(chatid):
     for myuser in user_list:
@@ -539,14 +539,23 @@ def sendTextToAll(mode, msg):
     if msg == "":
         return False
 
-    if mode == 1: #only for admin
+    if mode == 1:  # only for admin
         for user in user_list:
             if user.type == "admin":
                 bot.sendMessage(int(user.id), msg)
-    else: #send to all
+    else:  # send to all
         for user in user_list:
             bot.sendMessage(int(user.id), msg)
 
+
+def writeLog(sender, chatid, msg):
+    ts = time.gmtime()
+    logmsg = time.strftime("%Y-%m-%d %H:%M:%S", ts) + \
+             " : sender: " + sender + ", chatid: " + \
+             str(chatid) + ", msg: " + msg
+    # print(logmsg)
+    logpath = WORKING_FOLDER + "log.txt"
+    os.system("echo " + logmsg + " >> " + logpath)
 
 
 def getHelp(chatid):
@@ -590,12 +599,12 @@ def getHelp(chatid):
         "
     return retmsg
 
+
+# @static_vars(precmd="None")
 def docommand(chatid, cmd):
     global precmd
-    global cmdstage
-    global help_msg
 
-    ret = help_msg
+    ret = "/help for more information ! > ! <"
     cmd = cmd.lower()
 
     # pivpn command
@@ -616,13 +625,13 @@ def docommand(chatid, cmd):
 
     # Admin management command
     elif cmd == '/adduser':
-        ret = "Please input user in you want to add with syntax below: \n \
+        ret = "Please input user you want to add with syntax below: \n \
                <yourname> <chatid> <usertype> \n \
                 yourname, chatid, usertype(admin/normal) without space \n \
-                Ex: mariao 123456789 admin \n \
+                Ex: maria 123456789 admin \n \
               "
     elif cmd == '/deluser':
-        ret = "Please input username (no space) you want to add: "
+        ret = "Please input chatid of user (no space) you want to delete: "
     elif cmd == '/listuser':
         ret = listUser(chatid)
     elif cmd == '/logcmd':
@@ -681,8 +690,6 @@ def docommand(chatid, cmd):
             ret = "Canceled !!!"
         precmd = ""
         return ret
-    else:
-        ret = help_msg
 
     precmd = cmd
     return ret
@@ -693,37 +700,79 @@ def handle(msg):
     command = msg['text']
     sender = msg['chat']['first_name']
 
-    ts = time.gmtime()
-    logmsg = time.strftime("%Y-%m-%d %H:%M:%S", ts) + " : sender: " + sender + ", chatid: " + str(chat_id) + ", command: " + command
-
-    print(logmsg)
-
-    logpath = WORKING_FOLDER + "log.txt"
-
     if not checkUserValid(chat_id):
-        os.system("echo " + logmsg + " Invalid user >> " + logpath)
+        writeLog(sender, chat_id, "Invalid user")
         bot.sendMessage(chat_id, "Permission denied, You can not user this bot !!!")
     else:
-        os.system("echo " + logmsg + " >> " + logpath)
+        writeLog(sender, chat_id, command)
         bot.sendMessage(chat_id, docommand(chat_id, command))
+
+
+class piuser:
+    def __init__(self, username, id, type, time):
+        self.username = username  # can change
+        self.id = id  # can not change
+        self.type = type
+        self.time = time
+
+
+class gracefulKiller:
+    kill_now = False
+
+    def __init__(self):
+        signal.signal(signal.SIGINT, self.exit_gracefully)
+        signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+    def exit_gracefully(self, signum, frame):
+        self.kill_now = True
+
+
+class pivpntelebot:
+    def __init__(self):
+        print("Create new instance")
+
+    def setToken(self, token):
+        self.token = token
+        self.bot = telepot.Bot(self.token)
+
+    def start(self):
+        self.bot.message_loop(handle)
+
+    def sendMessage(self, chatid, msg):
+        self.bot.sendMessage(chatid, msg)
+
+    def sendDocument(self, chatid, docs):
+        self.bot.sendDocument(chatid, docs)
 
 
 # ------START TELEBOT-------
 WORKING_FOLDER = "/home/pi/ovpns/"
-help_msg = "/help for more information ! > ! <"
 precmd = "None"
-cmdstage = 0
 user_list = []
-TELEBOT_TOKEN = ""
-if not getTelebotToken():
-    print("can not get telebot token !!!")
-    exit(1)
 
-getUserlistInit()
-bot = telepot.Bot(TELEBOT_TOKEN)
-bot.message_loop(handle)
-#sendTextToAll(1, "Hi, I am back ...")
-while 1:
-    time.sleep(1000)
+bot = pivpntelebot()
 
 
+def main():
+    nuser = getUserlistInit()
+    if nuser == 0:
+        print("can not get admin info !!!")
+        exit(1)
+
+    tgtoken = getTelebotToken()
+    if tgtoken == "":
+        print("can not get telegrambot token !!!")
+        exit(1)
+
+    bot.setToken(tgtoken)
+    bot.start()
+
+    killer = gracefulKiller()
+    while not killer.kill_now:
+        time.sleep(1000)
+
+    writeLog("system", "system", "pivpntelebot was killed gracefully")
+
+
+if __name__ == '__main__':
+    main()
