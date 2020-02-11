@@ -20,6 +20,7 @@ then
 fi
 
 echo "Save telegram bot token to $HOME/ovpns/telebot.token"
+mkdir "$HOME/ovpns"
 echo "$bot_token" > "$HOME/ovpns/telebot.token"
 
 #setup your telegram account info
